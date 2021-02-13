@@ -9,6 +9,9 @@
   </a>
 </p>
 
+![CodeQL](https://github.com/pesc/searchzonech-index/workflows/CodeQL/badge.svg)
+
+
 > Indexing domains to AppSearch
 
 ### 🏠 [Homepage](https://github.com/pesc/searchzonech)
