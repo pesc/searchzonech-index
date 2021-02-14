@@ -19,14 +19,14 @@ class AppSearchConnector:
 
     def insert_new_document(self, body):
         try:
-            self.app_search.index_documents(engine_name=self.engine, body=body)
+            self.app_search.index_documents(engine_name=self.engine, documents=body)
         # ToDo Error Handling for response
         except:
             LOGGER.critical("Something went wrong with elastic for domain: %s", str(body))
 
     def update_existing_document(self, body):
         try:
-            self.app_search.put_documents(engine_name=self.engine, body=body)
+            self.app_search.put_documents(engine_name=self.engine, documents=body)
             LOGGER.debug("Updated document: %s", str(body))
         # ToDo Error Handling for response
         except:

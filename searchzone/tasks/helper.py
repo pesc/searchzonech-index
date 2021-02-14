@@ -47,19 +47,49 @@ def get_decoded_domain(domain):
 
 def get_record(domain, rr_list, answer, timeout=1):
     for RR in rr_list:
+        answer[RR.lower() + '_valid'] = False
         try:
             rr_set = dns.resolver.resolve(domain, RR, lifetime=timeout)
             for i in rr_set.response.answer:
+
                 for j in i.items:
                     if dns.rdatatype.to_text(j.rdtype) == 'CNAME':
                         continue
                     if RR == 'MX':
-                        answer.setdefault(RR.lower(), []).append(str(j.exchange))
+                        answer.setdefault(RR.lower() + '_record', []).append(str(j.exchange))
                         LOGGER.debug("Domain: %s with RR %s result %s", domain, RR, str(j.exchange))
+                        answer[RR.lower() + '_valid'] = True
                     else:
-                        answer.setdefault(RR.lower(), []).append(j.to_text())
+                        answer.setdefault(RR.lower() + '_record', []).append(j.to_text())
                         LOGGER.debug("Domain: %s with RR %s result %s", domain, RR, j.to_text())
+                        answer[RR.lower() + '_valid'] = True
+        except dns.resolver.NoAnswer:
+            LOGGER.debug("No answer for " + RR + " " + domain)
+        except dns.resolver.NXDOMAIN:
+            LOGGER.debug("NXDOMAIN for " + RR + " " + domain)
+        except dns.resolver.NoNameservers:
+            LOGGER.debug("No NS for " + RR + " " + domain)
+        except dns.resolver.Timeout:
+            LOGGER.debug("Timeout for " + RR + " " + domain)
+            timeout /= 2
+            LOGGER.info("Reducing timeout for " + domain + " to: " + str(timeout))
+        except:
+            LOGGER.critical("Other error for " + RR + " " + domain)
 
+
+def get_additional_records(domain, rr_list, answer, timeout=1):
+    for RR in rr_list:
+        answer[RR.lower() + '_valid'] = False
+        try:
+            if RR=='DMARC':
+                domain_dmarc = '_dmarc.' + domain
+                RR_typ = "TXT"
+                rr_set = dns.resolver.resolve(domain_dmarc, RR_typ, lifetime=timeout)
+            for i in rr_set.response.answer:
+                for j in i.items:
+                    answer.setdefault(RR.lower() + '_record', []).append(j.to_text())
+                    LOGGER.debug("Domain: %s with RR %s result %s", domain, RR, j.to_text())
+                    answer[RR.lower() + '_valid'] = True
         except dns.resolver.NoAnswer:
             LOGGER.debug("No answer for " + RR + " " + domain)
         except dns.resolver.NXDOMAIN:
