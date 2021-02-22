@@ -25,9 +25,8 @@ class Worker:
         LOGGER.debug('Performing requests on: %s engine: %s with file: %s', self.url, self.engine, self.file)
 
     def update(self):
-        # ToDo: Fix problem with overwriting info_mail
         for _ in range(10):
-            threading.Thread(target=new, args=[self.appsearch, self.domain_queue], daemon=True).start()
+            threading.Thread(target=new, args=[self.appsearch, self.domain_queue, False], daemon=True).start()
         self.domain_queue.join()
         for i in range(2500):
             LOGGER.info('Starting updating 1000 users to %d', i * 1000)
@@ -39,7 +38,7 @@ class Worker:
         LOGGER.info('Starting threads for Action NEW')
         read_file_and_add_to_queue(self.domain_queue, self.file)
         for _ in range(10):
-            threading.Thread(target=new, args=[self.appsearch, self.domain_queue], daemon=True).start()
+            threading.Thread(target=new, args=[self.appsearch, self.domain_queue, True], daemon=True).start()
         self.domain_queue.join()
 
     def diff(self):

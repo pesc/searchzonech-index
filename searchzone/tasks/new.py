@@ -8,29 +8,39 @@ from searchzone.tasks.helper import timestamp_now, check_dot_end, get_record, ge
 LOGGER = logging.getLogger(__name__)
 
 
-def new(appsearch, queue):
+def new(appsearch, queue, init=False):
     while True:
         domain = queue.get()
-        new_adding(appsearch, domain)
+        new_adding(appsearch, domain, init)
         queue.task_done()
 
-
-def new_adding(appsearch, domain):
+def init_entry():
     answer = {}
-    rr_list = ['A', 'AAAA', 'NS', 'TXT', 'MX', 'DS', 'DNSKEY', 'CAA', 'SOA']
-    rr_add_list = ['DMARC']
     local_time = timestamp_now()
-    timeout = 3.0
-    if check_dot_end(domain):
-        domain = domain[:-1]
-    answer['id'] = domain
     answer['domain_valid'] = True
     answer['info_valid'] = False
     answer['registry'] = ""
-    answer['spf_valid'] = False
-    answer['timestamp'] = str(local_time.isoformat())
+
     answer['timestamp_firstseen'] = str(local_time.isoformat())
-    answer['timestamp_lastseen'] = '1970-01-01T00:00:00.000000+01:00'
+    answer['timestamp_lastseen'] = '1970-01-01T02:00:00.000000+01:00'
+    return answer
+
+def new_adding(appsearch, domain, init):
+    if init:
+        answer = init_entry()
+    else:
+        answer = {}
+
+    local_time = timestamp_now()
+    answer['id'] = domain
+    answer['timestamp'] = str(local_time.isoformat())
+    rr_list = ['A', 'AAAA', 'NS', 'TXT', 'MX', 'DS', 'DNSKEY', 'CAA', 'SOA']
+    rr_add_list = ['DMARC']
+
+    timeout = 3.0
+    if check_dot_end(domain):
+        domain = domain[:-1]
+
     LOGGER.debug('Adding domain: %s', domain)
     try:
         answer['domain'] = idna.decode(domain)
@@ -38,6 +48,11 @@ def new_adding(appsearch, domain):
         get_additional_records(domain, rr_add_list, answer)
         if re.search("spf1", str(answer.get("txt_record"))):
             answer['spf_valid'] = True
+        else:
+            answer['spf_valid'] = False
     except idna.IDNAError:
         answer['domain'] = domain
-    appsearch.insert_new_document(answer)
+    if init:
+        appsearch.insert_new_document(answer)
+    else:
+        appsearch.update_existing_document(answer)

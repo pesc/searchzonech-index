@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timezone, timedelta
 
 from searchzone.tasks.helper import timestamp_now
 
@@ -12,7 +12,7 @@ def outdated(appsearch, queue):
     body = {
         "query": "true",
         "search_fields": {
-            "valid_domain": {}
+            "domain_valid": {}
         },
         "filters": {
             "timestamp": {
