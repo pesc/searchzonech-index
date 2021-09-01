@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='searchzone',
-    version='0.1',
+    version='0.1.1',
     packages=['searchzone', 'searchzone.tasks', 'searchzone.elastic'],
     url='https://searchzone.ch',
     license='',

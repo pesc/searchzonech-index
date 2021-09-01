@@ -31,15 +31,15 @@ def new_adding(appsearch, domain, init):
     else:
         answer = {}
 
+    if check_dot_end(domain):
+        domain = domain[:-1]
+
     local_time = timestamp_now()
     answer['id'] = domain
     answer['timestamp'] = str(local_time.isoformat())
     rr_list = ['A', 'AAAA', 'NS', 'TXT', 'MX', 'DS', 'DNSKEY', 'CAA', 'SOA']
     rr_add_list = ['DMARC']
-
     timeout = 3.0
-    if check_dot_end(domain):
-        domain = domain[:-1]
 
     LOGGER.debug('Adding domain: %s', domain)
     try:
